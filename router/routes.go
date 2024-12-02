@@ -6,6 +6,9 @@ import (
 )
 
 func SetupRoutes(app *fiber.App) {
-	roadGroup := app.Group("/roads")
-	roadGroup.Post("/nearest", handler.NearestLocation)
+	roadGroup := app.Group("/api")
+	roadGroup.Post("/getroad", handler.GetRoad)
+
+	// Menambahkan route baru untuk GetRegion
+	roadGroup.Post("/getregion", handler.GetRegion)
 }

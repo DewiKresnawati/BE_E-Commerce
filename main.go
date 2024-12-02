@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/cors" // Import CORS middleware
 	"go-loc/config"
 	"go-loc/router"
 	"log"
@@ -16,7 +17,11 @@ func main() {
 	// Initialize Fiber app
 	app := fiber.New()
 
+	// Use logger middleware
 	app.Use(logger.New())
+
+	// Use CORS middleware (can customize it in config/cors.go)
+	app.Use(cors.New()) // Default CORS settings
 
 	// Register routes
 	router.SetupRoutes(app)
