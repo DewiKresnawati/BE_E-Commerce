@@ -3,11 +3,11 @@ package handler
 import (
 	"be_ecommerce/config"
 	"be_ecommerce/model"
+	"be_ecommerce/utils"
 	"context"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -45,43 +45,48 @@ func Register(c *fiber.Ctx) error {
 
 // Login handles user login
 func Login(c *fiber.Ctx) error {
-	var loginData struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-
-	if err := c.BodyParser(&loginData); err != nil {
+	// Mendapatkan data dari body request
+	var req model.LoginRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Error parsing request body",
+			"status":  "error",
+			"message": "Invalid request body",
 		})
 	}
 
-	// Fetch user from DB
-	collection := config.MongoClient.Database("ecommerce").Collection("users")
+	// Validasi email dan password dari database
 	var user model.User
-	err := collection.FindOne(context.Background(), bson.M{"email": loginData.Email}).Decode(&user)
-	if err == mongo.ErrNoDocuments {
+	collection := config.MongoClient.Database("ecommerce").Collection("users")
+	err := collection.FindOne(c.Context(), bson.M{"email": req.Email}).Decode(&user)
+	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
 			"message": "Invalid email or password",
 		})
 	}
+
+	// Memeriksa apakah password cocok
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"status":  "error",
+			"message": "Invalid email or password",
+		})
+	}
+
+	// Generate JWT token
+	token, err := utils.GenerateJWT(user.ID.Hex())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Error fetching user from database",
+			"status":  "error",
+			"message": "Could not generate token",
 		})
 	}
 
-	// Compare passwords
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password)); err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"message": "Invalid email or password",
-		})
-	}
-
-	// Token generation logic could be added here
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+	// Mengembalikan response dengan token JWT
+	return c.JSON(fiber.Map{
+		"status":  "success",
 		"message": "Login successful",
-		"user":    user,
+		"token":   token,
 	})
 }
