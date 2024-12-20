@@ -1,16 +1,17 @@
 package handler
 
 import (
+	"be_ecommerce/config"
+	"be_ecommerce/model"
 	"context"
 	"encoding/json"
-	"go-loc/config"
-	"go-loc/model"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
+
 // GetRoad godoc
 // @Summary Mengambil data jalan berdasarkan permintaan
 // @Description Mengambil data jalan yang sesuai dengan query yang diberikan berdasarkan geospatial query
@@ -148,7 +149,7 @@ func GetRegion(c *fiber.Ctx) error {
 		"border": bson.M{
 			"$geoIntersects": bson.M{
 				"$geometry": bson.M{
-					"type":        "Point",  // Memastikan jenis geometri adalah "Point"
+					"type":        "Point", // Memastikan jenis geometri adalah "Point"
 					"coordinates": []float64{longlat.Longitude, longlat.Latitude},
 				},
 			},
@@ -172,19 +173,19 @@ func GetRegion(c *fiber.Ctx) error {
 
 	// Membuat response GeoJSON yang valid
 	geojsonResponse := fiber.Map{
-		"type": "FeatureCollection",  // "type" di tingkat atas
+		"type": "FeatureCollection", // "type" di tingkat atas
 		"features": []fiber.Map{
 			{
-				"type": "Feature",  // "Feature" untuk setiap item dalam features
+				"type": "Feature", // "Feature" untuk setiap item dalam features
 				"geometry": fiber.Map{
-					"type":        region.Border.Type,  // Menggunakan tipe geometri dari field "Border"
-					"coordinates": region.Border.Coordinates,  // Menggunakan koordinat geometri dari field "Border"
+					"type":        region.Border.Type,        // Menggunakan tipe geometri dari field "Border"
+					"coordinates": region.Border.Coordinates, // Menggunakan koordinat geometri dari field "Border"
 				},
 				"properties": fiber.Map{
-					"province":  region.Province,   // Properti lainnya
-					"district":  region.District,
+					"province":     region.Province, // Properti lainnya
+					"district":     region.District,
 					"sub_district": region.SubDistrict,
-					"village": region.Village,
+					"village":      region.Village,
 				},
 			},
 		},

@@ -1,14 +1,17 @@
 package router
 
 import (
+	"be_ecommerce/handler"
+
 	"github.com/gofiber/fiber/v2"
-	"go-loc/handler"
 )
 
 func SetupRoutes(app *fiber.App) {
-	roadGroup := app.Group("/api")
-	roadGroup.Post("/getroad", handler.GetRoad)
+	// Auth routes
+	app.Post("/register", handler.Register)
+	app.Post("/login", handler.Login)
 
-	// Menambahkan route baru untuk GetRegion
-	roadGroup.Post("/getregion", handler.GetRegion)
+	// Product routes
+	app.Post("/products", handler.CreateProduct)
+	app.Get("/products", handler.GetAllProducts)
 }
